@@ -8,21 +8,39 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import SearchIcon from './assets/icons/SearchIcon';
 import {colorOpacity, colors} from './assets/colors';
 import PinIcon from './assets/icons/PinIcon';
 import WeatherComponent from './components/WeatherComponent';
+import {fetchLocations, fetchWeatherForecast} from './utils/api';
+import {LocationInfoData, WeatherData} from './utils/Types';
 
-const SearchItem = (res: any) => {
-  const {item} = res;
+interface ISearchItemProps {
+  setLocationData: React.Dispatch<React.SetStateAction<[]>>;
+  setWeather: React.Dispatch<React.SetStateAction<WeatherData>>;
+  item: any;
+}
+
+const SearchItem = ({setLocationData, setWeather, item}: ISearchItemProps) => {
+  const handleLocation = () => {
+    setLocationData([]);
+
+    fetchWeatherForecast({
+      city: item.name,
+      days: '7',
+    }).then(data => {
+      setWeather(data);
+      console.log(typeof data);
+    });
+  };
   return (
-    <View style={styles.resItemContainer}>
+    <TouchableOpacity style={styles.resItemContainer} onPress={handleLocation}>
       <PinIcon fill={colors.lightGray} size={22} />
       <Text style={styles.resItem} numberOfLines={1}>
-        {item.country}
+        {item.name} , {item.country}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -30,7 +48,32 @@ const screen = Dimensions.get('window');
 const Home = () => {
   const handleToggleButton = () => {};
 
-  const sonuclar = [];
+  const [inputText, setInputText] = useState<string>('');
+  const [locationData, setLocationData] = useState<LocationInfoData[]>([]);
+  const [weather, setWeather] = useState<WeatherData>();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchDataAfterDelay = (text: string) => {
+    if (text.length > 2) {
+      fetchLocations(text).then(data => {
+        setLocationData(data);
+      });
+    }
+  };
+
+  console.log(weather);
+
+  const handleInputChange = (text: string) => {
+    setInputText(text);
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    timerRef.current = setTimeout(() => {
+      fetchDataAfterDelay(text);
+    }, 600); // 600ms sonra fetch işlemi gerçekleştirilecek
+  };
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
@@ -53,21 +96,28 @@ const Home = () => {
               style={styles.input}
               placeholder="Insert your text!"
               placeholderTextColor={colors.lightGray}
+              value={inputText}
+              onChangeText={handleInputChange}
             />
           </View>
         </View>
         <View style={styles.resultContainer}>
-          {sonuclar.length > 0 &&
-            sonuclar.map((item, index) => (
+          {locationData.length > 0 &&
+            locationData.map((item, index) => (
               <React.Fragment key={index}>
-                <SearchItem item={item} />
-                {index !== sonuclar.length - 1 && <View style={styles.line} />}
+                <SearchItem
+                  item={item}
+                  setLocationData={setLocationData}
+                  setWeather={setWeather}
+                />
+                {index !== locationData.length - 1 && (
+                  <View style={styles.line} />
+                )}
               </React.Fragment>
             ))}
         </View>
       </View>
-
-      <WeatherComponent />
+      {weather !== undefined && <WeatherComponent weather={weather} />}
     </SafeAreaView>
   );
 };

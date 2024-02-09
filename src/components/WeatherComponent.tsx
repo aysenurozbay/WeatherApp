@@ -1,64 +1,73 @@
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {FlatList, Image, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
-import SunIcon from '../assets/icons/SunIcon';
 import {colorOpacity, colors} from '../assets/colors';
 import WindIcon from '../assets/icons/WindIcon';
-import ThunderyIcon from '../assets/icons/ThunderyIcon';
+import {weatherImages} from '../assets/images/images';
+import SunriseIcon from '../assets/icons/SunriseIcon';
+import HumidityIcon from '../assets/icons/HumidityIcon';
+import {WeatherData} from '../utils/Types';
 
-const WeatherComponent = () => {
-  return (
+interface IWeatherComponentProps {
+  weather: WeatherData;
+}
+
+const WeatherComponent = ({weather}: IWeatherComponentProps) => {
+  const {location, current, forecast} = weather;
+
+  return weather ? (
     <View style={styles.container}>
-      <Text style={styles.title}>London, United State</Text>
+      <Text style={styles.title}>
+        {location?.name} , {location?.country}
+      </Text>
       <View style={styles.iconContainer}>
-        <SunIcon fill={colors.yellow} size={200} />
+        <Image
+          source={weatherImages[current?.condition?.text]}
+          resizeMode="contain"
+          style={styles.iconImage}
+        />
       </View>
-      <Text style={styles.degree}>20°</Text>
-      <Text style={styles.explanationText}>Mostly sunny</Text>
+      <Text style={styles.degree}>{current?.temp_c}°</Text>
+      <Text style={styles.explanationText}>{current?.condition?.text}</Text>
       <View style={styles.detailContainer}>
         <View style={styles.detailItem}>
           <WindIcon fill={colors.white} size={30} />
-          <Text style={styles.detailText}>22km </Text>
+          <Text style={styles.detailText}>{current?.wind_kph}km </Text>
         </View>
         <View style={styles.detailItem}>
-          <WindIcon fill={colors.white} size={30} />
-          <Text style={styles.detailText}>22km </Text>
+          <HumidityIcon fill={colors.white} size={30} />
+          <Text style={styles.detailText}>{current?.humidity}km </Text>
         </View>
         <View style={styles.detailItem}>
-          <WindIcon fill={colors.white} size={30} />
-          <Text style={styles.detailText}>22km </Text>
+          <SunriseIcon fill={colors.white} size={30} />
+          <Text style={styles.detailText}>
+            {weather?.forecast?.forecastday[0]?.astro?.sunrise}
+          </Text>
         </View>
       </View>
-      <ScrollView
+
+      <FlatList
+        data={forecast?.forecastday}
         horizontal={true}
+        showsHorizontalScrollIndicator={false}
         style={styles.dailyContainer}
-        showsHorizontalScrollIndicator={false}>
-        <View style={styles.dailyItem}>
-          <ThunderyIcon fill={colors.white} size={40} />
-          <Text style={styles.dayText}>Monday</Text>
-          <Text style={styles.dayDegreeText}>13°</Text>
-        </View>
-        <View style={styles.dailyItem}>
-          <ThunderyIcon fill={colors.white} size={40} />
-          <Text style={styles.dayText}>Monday</Text>
-          <Text style={styles.dayDegreeText}>13°</Text>
-        </View>
-        <View style={styles.dailyItem}>
-          <ThunderyIcon fill={colors.white} size={40} />
-          <Text style={styles.dayText}>Monday</Text>
-          <Text style={styles.dayDegreeText}>13°</Text>
-        </View>
-        <View style={styles.dailyItem}>
-          <ThunderyIcon fill={colors.white} size={40} />
-          <Text style={styles.dayText}>Monday</Text>
-          <Text style={styles.dayDegreeText}>13°</Text>
-        </View>
-        <View style={styles.dailyItem}>
-          <ThunderyIcon fill={colors.white} size={40} />
-          <Text style={styles.dayText}>Monday</Text>
-          <Text style={styles.dayDegreeText}>13°</Text>
-        </View>
-      </ScrollView>
+        renderItem={({item}) => {
+          return (
+            <View style={styles.dailyItem} key={item.date}>
+              <Image
+                source={weatherImages[item.day.condition.text]}
+                resizeMode="contain"
+                style={styles.dayIcon}
+              />
+              <Text style={styles.dayText}>{item.date}</Text>
+              <Text style={styles.dayDegreeText}>{item.day.avgtemp_c}°</Text>
+            </View>
+          );
+        }}
+        keyExtractor={item => item.date}
+      />
     </View>
+  ) : (
+    <Text style={{backgroundColor: 'red'}}> Set a Location</Text>
   );
 };
 
@@ -124,5 +133,13 @@ const styles = StyleSheet.create({
     color: colorOpacity.bgWhite(0.7),
     paddingVertical: 2,
     fontSize: 18,
+  },
+  iconImage: {
+    width: 180,
+    height: 180,
+  },
+  dayIcon: {
+    width: 50,
+    height: 50,
   },
 });

@@ -9,7 +9,7 @@ interface forecastEndpointParams {
 
 export const forecastEndpoint = (
   params: forecastEndpointParams,
-) => `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${params.city}&days=${params.days}&aqi=no&alerts=no
+) => `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${params.city}&days=${params.days}&aqi=no&alerts=no
 `;
 
 interface locationsParams {
@@ -18,7 +18,7 @@ interface locationsParams {
 
 export const locationsEndpoint = (
   params: locationsParams,
-) => `http://api.weatherapi.com/v1/search.json?key=${API_KEY}&&q=${params.location}
+) => `https://api.weatherapi.com/v1/search.json?key=${API_KEY}&&q=${params.location}
 
 `;
 
@@ -29,17 +29,17 @@ export const apiCall = async (endpoint: string) => {
   };
 
   try {
-    const responce = await axios.request(options);
-    return responce.data;
+    const response = await axios.request(options);
+    return response.data;
   } catch (error) {
-    console.log('ERROR', error);
-    return null;
+    console.log('error: ', error);
+    return {};
   }
 };
 
 export const fetchWeatherForecast = (params: any) => {
   return apiCall(forecastEndpoint(params));
 };
-export const fetchLocations = (params: any) => {
-  return apiCall(locationsEndpoint(params));
+export const fetchLocations = (city: string) => {
+  return apiCall(locationsEndpoint({location: city}));
 };
